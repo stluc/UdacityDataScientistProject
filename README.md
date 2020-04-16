@@ -34,8 +34,10 @@ I wanted to get a deeper understanding in developers' economic return around the
 
 ## File Descriptions <a name="files"></a>
 
-The repository contains the data files necessary to run the analysis.
-The full analysis is contained in the jupyter notebook. Most of the functions are written in a separate file that needs to be imported named 'AidFunctions.py'.
+The full analysis for years 2015-2019 is contained in the jupyter notebook. Most of the functions are written in a separate file that needs to be imported named 'AidFunctions.py'.
+The World Bank Data and the question schemas are attached, but due to limit in size, the Stack Overflow results have not been uploaded and can be found [here](https://insights.stackoverflow.com/survey).
+For the import of these csv, the files should be contained in the 'Project Files' folder, whereas the following naming convention for each year results was used:
+- 
 
 ## Results<a name="results"></a>
 
@@ -43,4 +45,4 @@ The main findings of the code can be found at the post available [here]().
 
 ## Licensing, Authors, Acknowledgements<a name="licensing"></a>
 
-Credit to Stack Overflow for the data and [DavidSalazarv95](https://www.kaggle.com/davidsalazarv95/average-income-worldwide) for the average incomes dataset.  You can find the Stack Overflow data [here](https://insights.stackoverflow.com/survey).
+Credit to Stack Overflow for the data and [DavidSalazarv95](https://www.kaggle.com/davidsalazarv95/average-income-worldwide) for the average incomes dataset.  .
