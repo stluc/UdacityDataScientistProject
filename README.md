@@ -37,7 +37,8 @@ I wanted to get a deeper understanding in developers' economic return around the
 The full analysis for years 2015-2019 is contained in the jupyter notebook. Most of the functions are written in a separate file that needs to be imported named 'AidFunctions.py'.
 The World Bank Data and the question schemas are attached, but due to limit in size, the Stack Overflow results have not been uploaded and can be found [here](https://insights.stackoverflow.com/survey).
 For the import of these csv, the files should be contained in the 'Project Files' folder, whereas the following naming convention for each year results was used:
-- 
+- Project Files\<year> Stack Overflow Survey Results
+  E.g. 'Project Files\2019 Stack Overflow Survey Results.csv'
 
 ## Results<a name="results"></a>
 
