@@ -43,7 +43,7 @@ For the import of these csv, the files should be contained in the 'Project Files
 
 ## Results<a name="results"></a>
 
-The main findings of the code can be found at the post available [here]().
+The main findings of the code can be found at the post available [here](https://medium.com/@iamjuststen/this-is-why-becoming-a-developer-pays-out-d733afe044a2).
 
 ## Licensing, Authors, Acknowledgements<a name="licensing"></a>
 
