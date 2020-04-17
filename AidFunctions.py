@@ -590,7 +590,7 @@ def rename_variable(df, questions, vars_to_convert, new_name):
 
 def set_bokeh_plot(plot,element):
     '''
-    Fix the axis for the Bokeh tools (PanTool, WheelZoomTool)
+    Fix the axis for the Bokeh tools (PanTool, WheelZoomTool) and remove scientific notation
     '''
     # The bokeh/matplotlib figure
     s = plot.state
@@ -598,13 +598,16 @@ def set_bokeh_plot(plot,element):
     pan_tool.dimensions="width"
     zoom_tool = s.select(dict(type=WheelZoomTool))
     zoom_tool.dimensions="width"
-    yaxis = s.select(dict(type=Axis, layout="left"))[0]
-    yaxis.formatter.use_scientific = False
+    try:
+        yaxis = s.select(dict(type=Axis, layout="left"))[0]
+        yaxis.formatter.use_scientific = False
+    except:
+        xaxis = s.select(dict(type=Axis, layout="below"))[0]
+        xaxis.formatter.use_scientific = False
     
     # A dictionary of handles on plot subobjects, e.g. in matplotlib
     # artist, axis, legend and in bokeh x_range, y_range, glyph, cds etc.
     h = plot.handles
-
     
 def plot_countries(df, col, round_val=1, col_tooltip='', nr_countries=10, reverse=False):
     '''
@@ -629,6 +632,8 @@ def plot_countries(df, col, round_val=1, col_tooltip='', nr_countries=10, revers
     else:
         label = 'Top'+str(nr_countries)
         plot_df = df[:nr_countries*len(years_list)][::-1]
+    plot_df_invert = plot_df[::-1].copy()
+    df_invert = df[::-1].copy()
         
     # Plot settings and parameters
     top_hover = HoverTool(tooltips=[('Country', '@Country'),('Year','@Year'),(col,col_tooltip)])
@@ -636,19 +641,19 @@ def plot_countries(df, col, round_val=1, col_tooltip='', nr_countries=10, revers
     year_hover = HoverTool(tooltips=[("Country","@Country"),(col,col_tooltip)])
 
     top_plot_arguments = dict(x='Year', y=col, by='Country', tools=[top_hover])
-    options_shared = dict(height=500, ylim=(0, max_y), hooks=[set_bokeh_plot], active_tools=['wheel_zoom'], padding=(0.1,0.1))
-    options = [opts.Bars(width=700, **options_shared),
+    options_shared = dict(height=700, ylim=(0, max_y), hooks=[set_bokeh_plot], active_tools=['wheel_zoom'], padding=(0.1,0.1))
+    options = [opts.Bars(width=700, show_grid=True, **options_shared),
                opts.Scatter(xticks=years_list, marker = 'o', size = 10, **options_shared),
                opts.NdOverlay(width=650, xticks=years_list, **options_shared),
                opts.Layout(tabs=True)]
 
     # Create the multiplot
-    layout = (plot_df.hvplot(kind='bar', label=label+'BarPlot', rot=90, **top_plot_arguments)+
+    layout = (plot_df_invert.hvplot(kind='barh', label=label+'BarPlot', rot=90, **top_plot_arguments)+
               plot_df.hvplot(kind='line', label=label+'LinePlot', **top_plot_arguments)*
               plot_df.hvplot(kind='scatter', label=label+'LinePlot', **top_plot_arguments)+
               df.hvplot(kind='bar', x='Year', y=col, groupby='Country', label='SingleCountryDropdown',
                                tools=[country_hover])+
-              df.hvplot(kind='bar', rot=90, x='Country', y=col, groupby='Year', label='AllCountriesYearSlider',
+              df_invert.hvplot(kind='barh', rot=90, x='Country', y=col, groupby='Year', label='AllCountriesYearSlider',
                                tools=[year_hover])
              ).opts(options)
     return layout
