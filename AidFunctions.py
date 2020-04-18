@@ -5,7 +5,7 @@ import bokeh
 from bokeh.models import PanTool, WheelZoomTool, Axis, HoverTool
 import colorcet as cc
 import holoviews as hv
-from holoviews import opts
+from holoviews import opts, dim, Cycle
 import hvplot.pandas
 from hvplot import hvPlot
 import matplotlib.pyplot as plt
@@ -588,6 +588,20 @@ def rename_variable(df, questions, vars_to_convert, new_name):
     return df, questions
 
 
+def axis_not_scientific(plot,element):
+    s = plot.state
+    try:
+        yaxis = s.select(dict(type=Axis, layout="left"))[0]
+        yaxis.formatter.use_scientific = False
+    except:
+        pass
+    try:
+        xaxis = s.select(dict(type=Axis, layout="below"))[0]
+        xaxis.formatter.use_scientific = False
+    except:
+        pass
+
+
 def set_bokeh_plot(plot,element):
     '''
     Fix the axis for the Bokeh tools (PanTool, WheelZoomTool) and remove scientific notation
@@ -598,12 +612,7 @@ def set_bokeh_plot(plot,element):
     pan_tool.dimensions="width"
     zoom_tool = s.select(dict(type=WheelZoomTool))
     zoom_tool.dimensions="width"
-    try:
-        yaxis = s.select(dict(type=Axis, layout="left"))[0]
-        yaxis.formatter.use_scientific = False
-    except:
-        xaxis = s.select(dict(type=Axis, layout="below"))[0]
-        xaxis.formatter.use_scientific = False
+    axis_not_scientific(plot,element)
     
     # A dictionary of handles on plot subobjects, e.g. in matplotlib
     # artist, axis, legend and in bokeh x_range, y_range, glyph, cds etc.
@@ -624,7 +633,7 @@ def plot_countries(df, col, round_val=1, col_tooltip='', nr_countries=10, revers
     max_y = np.ceil(np.nanmax(df[col].values))
     max_y = max_y - max_y%round_val + 2*round_val
     if col_tooltip == '':
-        col_tooltip = '@{'+col.replace(" ", "_")+'}'    # Holoviews auto-replaces spaces with underscores
+        col_tooltip = '@{'+col.replace(" ", "_")+'}{0,0.000}'    # Holoviews auto-replaces spaces with underscores
     years_list = list(df['Year'].unique())
     if reverse == True:
         label = 'Bottom'+str(nr_countries)
@@ -648,13 +657,64 @@ def plot_countries(df, col, round_val=1, col_tooltip='', nr_countries=10, revers
                opts.Layout(tabs=True)]
 
     # Create the multiplot
-    layout = (plot_df_invert.hvplot(kind='barh', label=label+'BarPlot', rot=90, **top_plot_arguments)+
+    layout = (plot_df_invert.hvplot(kind='barh', label=label+'BarPlot', **top_plot_arguments)+
               plot_df.hvplot(kind='line', label=label+'LinePlot', **top_plot_arguments)*
               plot_df.hvplot(kind='scatter', label=label+'LinePlot', **top_plot_arguments)+
               df.hvplot(kind='bar', x='Year', y=col, groupby='Country', label='SingleCountryDropdown',
                                tools=[country_hover])+
-              df_invert.hvplot(kind='barh', rot=90, x='Country', y=col, groupby='Year', label='AllCountriesYearSlider',
+              df_invert.hvplot(kind='barh', x='Country', y=col, groupby='Year', label='AllCountriesYearSlider',
                                tools=[year_hover])
+             ).opts(options)
+    return layout
+
+
+def plot_scatter(df, x, y, x_round_val=1, y_round_val=1, x_tooltip='', y_tooltip=''):
+    '''
+    
+    Returns a HoloViews plot layout.
+        Arguments:
+        df - Dataframe to process, must have the column 'Country' adn the columns x and y within.
+        x - Column in Dataframe where values are evaluated for the x-axis
+        y - Column in Dataframe where values are evaluated for the y-axis
+        x_round_val (optional) - single numeric value to set the x axis limits on max found within x
+        y_round_val (optional) - single numeric value to set the y axis limits on max found within y
+        x_tooltip (optional) - tooltip to be set in the plots for the x values
+        y_tooltip (optional) - tooltip to be set in the plots for the y values
+    '''
+    max_y = np.ceil(np.nanmax(df[y].values))
+    max_y = max_y - max_y%y_round_val + 2*y_round_val
+    max_x = np.ceil(np.nanmax(df[x].values))
+    max_x = max_x - max_x%x_round_val + 2*x_round_val
+    '''
+    if max_x > max_y:
+        max_y = max_x
+    else:
+        max_x=max_y
+    '''    
+    if x_tooltip == '':
+        x_tooltip = '@{'+x+'}{0,0.0}'
+    if y_tooltip == '':
+        y_tooltip = '@{'+y+'}{0,0.0}'
+
+    # Plot settings and parameters
+    hover = HoverTool(tooltips=[('Country', '@Country'),(x,x_tooltip),(y,y_tooltip)])
+    padding = dict(x=(-1.2, 1.2), y=(-1.2, 1.2))
+    
+    options_shared = dict(width=700, height=700, xlim=(0, max_x), ylim=(0, max_y), hooks=[axis_not_scientific], 
+                          active_tools=['wheel_zoom'], padding=(0.1,0.1), show_grid=True, show_legend=True,
+                          legend_position='bottom', legend_cols=3)
+    options = [opts.Scatter(marker = 'o', size = 10, fill_alpha=0.6, tools=[hover], color=hv.Palette('Set2'),
+                            **options_shared),
+               opts.Points(color='Country', cmap=cc.cm.fire, size=8, tools=[hover], **options_shared),
+               opts.Labels(text_font_size='8pt', yoffset=y_round_val/5),
+               opts.Overlay(**options_shared)
+               ]
+    
+    ds = hv.Table(df)
+    # Create the plot
+    layout = (#hv.Scatter(df, kdims=[x], vdims=[y, 'Country'])*
+              ds.to(hv.Scatter, x, y, 'Country').overlay()*
+              hv.Labels(ds, kdims=[x, y], vdims=['Country'])
              ).opts(options)
     return layout
 
